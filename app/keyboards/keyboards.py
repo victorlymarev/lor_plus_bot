@@ -196,13 +196,19 @@ def get_dates_kb(q_type: str,
 
     dates, inds = get_date_inds(dates, include_sunday=include_sunday)
 
+    RUSSIAN_MONTHS = {
+        1: "Январь", 2: "Февраль", 3: "Март", 4: "Апрель",
+        5: "Май", 6: "Июнь", 7: "Июль", 8: "Август",
+        9: "Сентябрь", 10: "Октябрь", 11: "Ноябрь", 12: "Декабрь"
+    }
+    month_name = RUSSIAN_MONTHS[dates[0].month]
     buttons = []
     buttons.append(
         [IKB(text='⬅' if prev_year is not None else ' ',
              callback_data=(f'{q_type} other_month|{prev_month} {prev_year}'
                             if prev_year is not None else 'placeholder')),
 
-         IKB(text=f'{dates[0].month_name("ru")} {dates[0].year}',
+         IKB(text=f'{month_name} {dates[0].year}',
              callback_data='placeholder'),
 
          IKB(text='➡' if next_year is not None else ' ',

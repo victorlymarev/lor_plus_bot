@@ -7,6 +7,13 @@ from aiogram.enums import ParseMode
 from database.db_create import Base, engine
 from omegaconf import OmegaConf
 
+import os
+import locale
+
+os.environ["LC_ALL"] = "ru_RU.UTF-8"
+os.environ["LANG"] = "ru_RU.UTF-8"
+locale.setlocale(locale.LC_TIME, "ru_RU.UTF-8")
+
 config = Config(RepositoryEnv('../.env'))
 
 # чтение переменных среды
