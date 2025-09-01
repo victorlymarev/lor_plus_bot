@@ -1110,6 +1110,7 @@ async def approve_appointment(call: CallbackQuery, state: FSMContext):
     Form.date)
 async def add_day(call: CallbackQuery, state: FSMContext):
     '''Функция делает день доступным для записи'''
+    global day_config
     await call.answer()
     q_type = call.data.split()[0]
     prev_reply = ''
@@ -1310,7 +1311,7 @@ async def add_day(call: CallbackQuery, state: FSMContext):
     Form.date)
 async def add_week(call: CallbackQuery, state: FSMContext):
     '''Функция делает неделю доступной для записи'''
-
+    global week_config
     if 'approve' in call.data:
         await call.message.edit_reply_markup(reply_markup=None)
 
