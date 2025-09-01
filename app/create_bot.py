@@ -2,10 +2,11 @@ import logging
 from decouple import Config, RepositoryEnv
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
-from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.enums import ParseMode
 from database.db_create import Base, engine
 from omegaconf import OmegaConf
+from redis.asyncio import Redis
 
 import os
 import locale
@@ -24,6 +25,14 @@ user_treatment_limit = int(config('USER_TREATMENT_LIMIT'))
 registrators = [int(i) for i in config('REG').split(', ')]
 chat_id = int(config('CHAT_ID'))
 
+redis = Redis(
+    host='localhost',
+    port=6380,
+    password=config('REDIS_PASSWORD'),
+    db=0,
+    decode_responses=True
+)
+
 # логгер
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s -\
@@ -33,7 +42,7 @@ logger = logging.getLogger(__name__)
 # бот
 bot = Bot(token=config('TOKEN'),
           default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-dp = Dispatcher(storage=MemoryStorage())
+dp = Dispatcher(storage=RedisStorage(redis=redis))
 
 
 # бд
