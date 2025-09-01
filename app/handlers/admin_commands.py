@@ -1159,6 +1159,7 @@ async def add_day(call: CallbackQuery, state: FSMContext):
             tr = not int(fsm_data)
             day_config[doctor_id][dt.weekday()]['treatment'] = tr
 
+        day_config = OmegaConf.create(day_config)
         OmegaConf.save(day_config, "../data/yaml_configs/day_config.yaml")
     else:
         data = await state.get_data()
@@ -1401,7 +1402,8 @@ async def add_week(call: CallbackQuery, state: FSMContext):
                 prev_reply += 'в списке выходных дней. Он был удален из этого'
                 prev_reply += 'списка</b>\n'
 
-        OmegaConf.save(day_config, "../data/yaml_configs/week_config.yaml")
+        day_config = OmegaConf.create(week_config)
+        OmegaConf.save(week_config, "../data/yaml_configs/week_config.yaml")
 
     data = await state.get_data()
     reply = get_reply(q_type=q_type,
