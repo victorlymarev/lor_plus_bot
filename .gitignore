@@ -3,9 +3,12 @@ __pycache__/
 *.py[oc]
 build/
 dist/
+*.conf
 wheels/
 *.egg-info
 .venv
 .env
 .ipynb_checkpoints
 *.db
+db/
+redis/
