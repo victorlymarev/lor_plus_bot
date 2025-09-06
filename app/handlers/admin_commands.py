@@ -2035,7 +2035,7 @@ async def write_user_id(call: CallbackQuery, state: FSMContext):
 async def return_actions_with_user_ms(message: Message,
                                       state: FSMContext):
     '''Функция обрабатывает введёный id пользователя'''
-    log = await get_log(call=call, state=state)
+    log = await get_log(message=message, state=state)
     logger.info(log)
     data = await state.get_data()
     user_id = message.text.strip()
