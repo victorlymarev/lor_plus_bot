@@ -1,4 +1,4 @@
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 from keyboards.keyboards import get_back_to_main_kb
 from database.handlers import AsyncORM
@@ -147,3 +147,22 @@ async def get_user_info(user_id: int, user_name: str,
             m = note.action
             text += f'\n    <i>{ind}. {date} {m}</i>'
     return text
+
+
+async def get_log(call: CallbackQuery = None,
+                  message: Message = None,
+                  state: FSMContext = None):
+    '''Функция возвращает логи'''
+    log = '$$'
+    if call is not None:
+        log += f'callback - {call.data} $'
+        log += f'user_id - {call.from_user.id} $'
+    if message is not None:
+        log += f'message - {message.text} $'
+        log += f'user_id - {message.from_user.id} $'
+    if state is not None:
+        st = await state.get_state()
+        st_data = await state.get_data()
+        log += f'state - {st} $'
+        log += f'state_data - {st_data} $'
+    return log[:-2]

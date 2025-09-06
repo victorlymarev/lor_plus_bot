@@ -8,6 +8,7 @@ from database.handlers import AsyncORM
 from create_bot import (admins,
                         registrators,
                         chat_id,
+                        logger,
                         day_config,
                         week_config,
                         m_final_short)
@@ -46,6 +47,7 @@ from utils.utils import (get_doctor_name_by_id,
                          handle_dates,
                          get_reply)
 from utils.async_functions import (back_to_main,
+                                   get_log,
                                    get_answer_type,
                                    get_critical_messege)
 from datetime import datetime, timedelta
@@ -58,6 +60,8 @@ admin_router.message.filter(IsAdmin(admins + registrators))
 @admin_router.message(CommandStart())
 async def start(message: Message, state: FSMContext):
     '''Функция отрабатывает на команду /start и возвращает главное меню'''
+    log = await get_log(message=message, state=state)
+    logger.info(log)
     await state.clear()
     is_admin = message.from_user.id in admins
     await message.answer(
@@ -68,6 +72,8 @@ async def start(message: Message, state: FSMContext):
 @admin_router.callback_query(F.data.startswith('main'))
 async def return_main_kb(call: CallbackQuery, state: FSMContext):
     '''Функция возвращает главное меню'''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     await state.clear()
     is_admin = call.from_user.id in admins
@@ -92,6 +98,8 @@ async def return_main_kb(call: CallbackQuery, state: FSMContext):
 @admin_router.callback_query(F.data == 'admin_kb')
 async def return_admin_kb(call: CallbackQuery, state: FSMContext):
     '''Функция возвращает панель администратора'''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     await state.clear()
     answer = await get_answer_type(call)
@@ -104,6 +112,8 @@ async def return_admin_kb(call: CallbackQuery, state: FSMContext):
 @admin_router.callback_query(F.data == 'open_close_date')
 async def return_open_close_kb(call: CallbackQuery, state: FSMContext):
     '''Функция возвращает панель добавления и закрытия времени'''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     await state.clear()
     answer = await get_answer_type(call)
@@ -128,6 +138,8 @@ async def choose_doctor(call: CallbackQuery, state: FSMContext):
     remove_day
     user_actions_app
     '''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     q_type = call.data.split()[0]
 
     await call.answer()
@@ -186,7 +198,8 @@ async def choose_date(call: CallbackQuery, state: FSMContext):
     show_date
     user_actions_app
     '''
-
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
 
@@ -400,6 +413,8 @@ async def show_date(call: CallbackQuery, state: FSMContext):
     '''Функция работает с методом show_date
     Она устанавливает состояние и вызывает функцию с выбором даты
     '''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await state.clear()
     await state.update_data(action_type='show_date')
     await state.set_state(Form.date)
@@ -456,7 +471,8 @@ async def choose_week(call: CallbackQuery, state: FSMContext):
     F.data.contains('choose_time'))
 async def choose_time(call: CallbackQuery, state: FSMContext):
     '''Функция возвращает выбор клавиатуры со временем'''
-
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
     if (await state.get_data()).get('action_type') != q_type:
@@ -685,6 +701,8 @@ async def add_and_remove_time_final(call: CallbackQuery, state: FSMContext):
     подтверждает действие вызывается второй раз. Может вызываться более двух
     раз в случае ошибок.
     '''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
     if (await state.get_data()).get('action_type') != q_type:
@@ -854,7 +872,8 @@ async def set_user_contact(call: CallbackQuery, state: FSMContext):
     '''Функция вызывается при попытке добавить запись пользователя
     после выбора клавиатуры. Она предлагает ввести контакт клиента
     '''
-
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
 
     q_type = call.data.split()[0]
@@ -919,7 +938,8 @@ async def read_user_contact(message: Message, state: FSMContext):
     '''Функция обрабатывает контакт при попытке записи
     и возвращает клавиатуру с предложением подтвердить действие
     '''
-
+    log = await get_log(message=message, state=state)
+    logger.info(log)
     await state.update_data(user_name=message.text)
 
     data = await state.get_data()
@@ -995,6 +1015,8 @@ async def read_user_contact(message: Message, state: FSMContext):
     Form.time)
 async def approve_appointment(call: CallbackQuery, state: FSMContext):
     '''Функция записывает человека на приём'''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
 
@@ -1111,6 +1133,8 @@ async def approve_appointment(call: CallbackQuery, state: FSMContext):
 async def add_day(call: CallbackQuery, state: FSMContext):
     '''Функция делает день доступным для записи'''
     global day_config
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
     prev_reply = ''
@@ -1312,6 +1336,8 @@ async def add_day(call: CallbackQuery, state: FSMContext):
 async def add_week(call: CallbackQuery, state: FSMContext):
     '''Функция делает неделю доступной для записи'''
     global week_config
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     if 'approve' in call.data:
         await call.message.edit_reply_markup(reply_markup=None)
 
@@ -1646,6 +1672,8 @@ async def add_week(call: CallbackQuery, state: FSMContext):
                               | F.data.contains('approve')),
                              Form.date)
 async def remove_day(call: CallbackQuery, state: FSMContext):
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
 
@@ -1744,6 +1772,8 @@ async def remove_day(call: CallbackQuery, state: FSMContext):
                               | F.data.contains('approve')),
                              Form.date)
 async def remove_week(call: CallbackQuery, state: FSMContext):
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
 
@@ -1825,6 +1855,8 @@ async def remove_week(call: CallbackQuery, state: FSMContext):
 )
 async def show_appointments(call: CallbackQuery, state: FSMContext):
     '''Функция показывает записи на приём'''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
     answer = await get_answer_type(call)
@@ -1983,6 +2015,8 @@ async def show_appointments(call: CallbackQuery, state: FSMContext):
 )
 async def write_user_id(call: CallbackQuery, state: FSMContext):
     '''Функция простит пользователя ввести id'''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
     await state.update_data(action_type=q_type)
@@ -2001,6 +2035,8 @@ async def write_user_id(call: CallbackQuery, state: FSMContext):
 async def return_actions_with_user_ms(message: Message,
                                       state: FSMContext):
     '''Функция обрабатывает введёный id пользователя'''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     data = await state.get_data()
     user_id = message.text.strip()
 
@@ -2063,6 +2099,8 @@ async def return_actions_with_user_cb(
     call: CallbackQuery, state: FSMContext
        ):
     '''Функция возвращает клавиатуру с выбором действия с пользователем'''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
 
@@ -2181,6 +2219,8 @@ async def return_actions_with_user_cb(
 async def ban_or_unban_user(
     call: CallbackQuery, state: FSMContext
        ):
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
 
@@ -2250,6 +2290,8 @@ async def ban_or_unban_user(
 async def write_to_user_or_add_mark(
     call: CallbackQuery, state: FSMContext
        ):
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
 
@@ -2289,6 +2331,8 @@ async def write_to_user_or_add_mark(
 @admin_router.message(StateFilter(Form.message, Form.mark))
 async def read_messege_or_mark(message: Message,
                                state: FSMContext):
+    log = await get_log(message=message, state=state)
+    logger.info(log)
     data = await state.get_data()
     q_type = data['action_type']
     st = await state.get_state()
@@ -2337,6 +2381,8 @@ async def read_messege_or_mark(message: Message,
 async def send_message_to_user(
     call: CallbackQuery, state: FSMContext
        ):
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
 
@@ -2386,6 +2432,8 @@ async def send_message_to_user(
 async def send_mark_to_db(
     call: CallbackQuery, state: FSMContext
        ):
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
 
@@ -2432,6 +2480,8 @@ async def send_mark_to_db(
 async def ask_feedback(
     call: CallbackQuery, state: FSMContext
        ):
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
 
@@ -2502,6 +2552,8 @@ async def ask_feedback(
 )
 async def show_user_apps(call: CallbackQuery, state: FSMContext):
     '''Функция выводит на экран все записи пользователя'''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
 
@@ -2557,6 +2609,8 @@ async def show_user_apps(call: CallbackQuery, state: FSMContext):
 )
 async def show_user_acitions(call: CallbackQuery, state: FSMContext):
     '''Функция выводит на экран все действия пользователя'''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
 
@@ -2624,6 +2678,8 @@ async def show_user_acitions(call: CallbackQuery, state: FSMContext):
 )
 async def remove_user_apps(call: CallbackQuery, state: FSMContext):
     '''Функция удаляет все записи пользователя'''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
 
@@ -2703,6 +2759,8 @@ async def handle_app(call: CallbackQuery, state: FSMContext):
     Функция обрабатывает выбранную запись и в зависимости от этого
     возвращает нужную клавиатуру
     '''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     if (await AsyncORM.check_user(call.from_user.id))[0]:
         return None
     await call.answer()
@@ -2786,6 +2844,8 @@ async def set_app_move(call: CallbackQuery, state: FSMContext):
     Функция обрабатывает выбранную запись и в зависимости от этого
     возвращает нужную клавиатуру
     '''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
     if (await state.get_data()).get('action_type') != q_type:
@@ -2951,6 +3011,8 @@ async def set_app_move(call: CallbackQuery, state: FSMContext):
 
 @admin_router.callback_query(F.data.contains('get_data'))
 async def get_data(call: CallbackQuery):
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     if call.data == 'get_data':
         await call.message.edit_text(
             text='Выберите данные, которые хотите скачать',

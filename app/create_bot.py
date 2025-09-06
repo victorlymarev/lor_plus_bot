@@ -34,23 +34,42 @@ redis = Redis(
 )
 
 # логгер
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(name)s -\
-                        %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('main_logger')
+logger.setLevel(logging.INFO)  # 🔴 Важно: установите уровень логирования
+logging.getLogger('aiogram').setLevel(logging.WARNING)
+
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(module)s:%(lineno)d - %(levelname)s - %(message)s'
+)
+
+log_dir = '../data/logs'
+os.makedirs(log_dir, exist_ok=True)
+
+file_handler = logging.FileHandler(
+    filename=os.path.join(log_dir, 'app.log'),
+    encoding='utf-8'
+)
+file_handler.setFormatter(formatter)
+file_handler.setLevel(logging.DEBUG)
+
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+console_handler.setLevel(logging.INFO)
+
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
 
 # бот
 bot = Bot(token=config('TOKEN'),
           default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher(storage=RedisStorage(redis=redis))
 
-
 # бд
 async def create_tables():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
-        logger.info('бд создана')
+        logger.info('База данных создана')
 
 
 day_config = OmegaConf.to_container(

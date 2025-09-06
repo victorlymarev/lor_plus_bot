@@ -12,6 +12,7 @@ from keyboards.keyboards import (get_main_user_kb,
                                  get_dates_kb_short)
 from create_bot import (registrators,
                         admins,
+                        logger,
                         user_appointment_limit,
                         chat_id,
                         user_treatment_limit)
@@ -24,6 +25,7 @@ from utils.utils import (get_doctor_name_by_id,
 from utils.async_functions import (back_to_main_user,
                                    check_user_limits,
                                    get_user_info,
+                                   get_log,
                                    get_answer_type)
 from aiogram.fsm.context import FSMContext
 from handlers.fsm import UserForm
@@ -38,10 +40,12 @@ user_router.message.filter(IsUser(admins, registrators))
 async def start(message: Message,
                 state: FSMContext):
     '''Обрабатывает команду /start'''
+    log = await get_log(message=message, state=state)
+    logger.info(log)
     await state.clear()
     apps, treats, _ = await AsyncORM.get_records_for_main_menu(
         message.from_user.id)
-    reply = 'Добро пожаловать в бот медицинского центра ЛОР плюс'
+    reply = 'Добро пожаловать в бот медицинского центра ЛОР плюс (бот пока не работает)'
     if apps:
         reply += '\n\n<b>Записи на приём:</b>'
         for index, app in enumerate(apps, 1):
@@ -77,14 +81,16 @@ async def return_main_kb(call: CallbackQuery, state: FSMContext):
     '''
     Функция возвращает главное меню
     '''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     if (await AsyncORM.check_user(call.from_user.id))[0]:
         return None
     await call.answer()
     await state.clear()
     apps, treats, _ = await AsyncORM.get_records_for_main_menu(
         call.from_user.id)
-
-    reply = 'Добро пожаловать в бот медицинского центра ЛОР плюс'
+    logger.info(f'callback: {call.data}; user_id: {call.from_user.id}')
+    reply = 'Добро пожаловать в бот медицинского центра ЛОР плюс (бот пока не работает)'
 
     if apps:
         reply += '\n\n<b>Записи на приём:</b>'
@@ -123,6 +129,8 @@ async def choose_app(call: CallbackQuery, state: FSMContext):
     которую он хочет удалить или переместить. Возвращает
     клавиатуру с текущими записями
     '''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     if (await AsyncORM.check_user(call.from_user.id))[0]:
         return None
     await call.answer()
@@ -196,6 +204,8 @@ async def handle_app(call: CallbackQuery, state: FSMContext):
     Функция обрабатывает выбранную запись и в зависимости от этого
     возвращает нужную клавиатуру
     '''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     if (await AsyncORM.check_user(call.from_user.id))[0]:
         return None
     await call.answer()
@@ -292,6 +302,8 @@ async def handle_app(call: CallbackQuery, state: FSMContext):
 @user_router.callback_query(F.data.contains('choose_user_doctor'))
 async def choose_doctor(call: CallbackQuery, state: FSMContext):
     '''Функция позволяет выбрать врача при записи на приём'''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     if (await AsyncORM.check_user(call.from_user.id))[0]:
         return None
     await call.answer()
@@ -334,6 +346,8 @@ async def choose_doctor(call: CallbackQuery, state: FSMContext):
                                         UserForm.time))
 async def choose_date(call: CallbackQuery, state: FSMContext):
     '''Возвращает клавиатуру с выбором даты'''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     if (await AsyncORM.check_user(call.from_user.id))[0]:
         return None
 
@@ -421,7 +435,6 @@ async def choose_date(call: CallbackQuery, state: FSMContext):
         prev_reply += ' других' if q_type == 'move_user_app' else ''
         prev_reply += ' свободных слотов для записи\n</b>'
         reply = prev_reply + reply
-        print(reply)
         return await answer(
             text=reply,
             reply_markup=get_back_kb(q_back, 'get_user_main_kb edit')
@@ -449,6 +462,8 @@ async def choose_time(call: CallbackQuery, state: FSMContext):
     '''Позволяет пользователю выбрать время для записи. Возвращает
     клавиатуру с временем
     '''
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     await call.answer()
     q_type = call.data.split()[0]
     answer = await get_answer_type(call)
@@ -554,7 +569,8 @@ async def approve_time(call: CallbackQuery, state: FSMContext):
     Функция подтверждает выбор времени при добавлении и
     переносе записи
     '''
-
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     if (await AsyncORM.check_user(call.from_user.id))[0]:
         return None
     q_type = call.data.split()[0]
@@ -740,7 +756,8 @@ async def del_user_app(call: CallbackQuery, state: FSMContext):
     '''
     Функция подтвеждает удаление записи
     '''
-
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     if (await AsyncORM.check_user(call.from_user.id))[0]:
         return None
     q_type = call.data.split()[0]
@@ -798,7 +815,8 @@ async def info(call: CallbackQuery, state: FSMContext):
     '''
     Функция возвращает информацию о больнице
     '''
-
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     if (await AsyncORM.check_user(call.from_user.id))[0]:
         return None
     await call.answer()
@@ -818,7 +836,8 @@ async def prices(call: CallbackQuery, state: FSMContext):
     '''
     Функция отправляет пользователю цены на услуги
     '''
-
+    log = await get_log(call=call, state=state)
+    logger.info(log)
     if (await AsyncORM.check_user(call.from_user.id))[0]:
         return None
     await call.answer()
